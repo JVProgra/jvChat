@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Core\Networking\BaseClient.cs" />
     <Compile Include="Core\Networking\ConnectionArgs.cs" />
     <Compile Include="Core\Networking\Server.cs" />
     <Compile Include="Program.cs" />

@@ -113,6 +113,8 @@ namespace jvChatServer.Core.Networking
                     //Receive the incoming connection and store it in the socket variable "client" 
                     Socket client = svrSocket.EndAccept(ir);
 
+                    //****************PLEASE MODIFY THIS TO RUN ON A NEW THREAD BECAUSE OF HANDSHAKE*******************************
+
                     //If the event handler for inbound connection is being handled
                     if (InboundConnection != null)
                         //Raise the event with a new connection args using this as the server and our new inbound client as our client socket 
