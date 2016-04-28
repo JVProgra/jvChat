@@ -6,10 +6,11 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace jvChatServer.Core.Networking
 {
-    class BaseClient
+    abstract class BaseClient
     {
 
         //=== Accessible Fields / Properties 
@@ -18,9 +19,7 @@ namespace jvChatServer.Core.Networking
         public bool Enabled { get; private set; }
 
         // Returns the ip address of the connection (read only) 
-        public string IPAddress { get { return ip; } }
-        //The private ip address 
-        private string ip;
+        public string IPAddress { get { return ((IPEndPoint)client.RemoteEndPoint).Address.ToString(); } }
 
         //=== Class Variables === 
         //The socket instance we will use to store our inbound connection 
@@ -32,8 +31,6 @@ namespace jvChatServer.Core.Networking
         //=== Event Handlers === 
         public delegate void DisconnectedHandler(BaseClient client);
         public event DisconnectedHandler Disconnected;
-        public delegate void InboundDataHandler(BaseClient src, byte[] data);
-        public event InboundDataHandler InboundData; 
 
         /// <summary>
         /// Constructor to create instance of new base in bound client 
@@ -49,9 +46,6 @@ namespace jvChatServer.Core.Networking
             this.client = args.Client;
             this.Protocol = args.Protocol;
             this.UUID = args.UUID;
-
-            //Get the ip address of the inbound connection
-            this.ip = client.RemoteEndPoint.ToString().Remove(client.RemoteEndPoint.ToString().LastIndexOf(':'));
 
             //Intialize any other variables in the class to a safe state
             sendLocker = new object();
@@ -77,13 +71,8 @@ namespace jvChatServer.Core.Networking
                     //Start receiving data asychronusly 
                     this.client.BeginReceive(new byte[] { 0 }, 0, 0, 0, ReceiveData, null);
                 }
-                catch (Exception ex)
+                catch (Exception ex) //error occured and we were unable to rec data (probably disconnected...) 
                 {
-                    //We have failed to receive data so lets notify the main program (typically means the client has disconnected) 
-                    if (Disconnected != null)
-                        ///Call the event using this object 
-                        Disconnected(this); 
-
                     //Lastly cleanup this object (kind of like an internal dispose to clean up our objects) 
                     Cleanup(); 
                 }
@@ -121,22 +110,70 @@ namespace jvChatServer.Core.Networking
             {
                 try
                 {
+                    //Create a memory stream to store the buffer of the incoming data 
+                    MemoryStream ms = new MemoryStream();
 
+                    //Create some size variables to help calculate how much data is to be and left to be received 
+                    int read = 0;
+                    int size = 0;
 
-                    this.client.BeginReceive(new byte[] { 0 }, 0, 0, 0, ReceiveData, null);
+                    //A buffer to use for parts of the incoming data (starting at 4 bytes to receive the "Size" of the incoming packet 
+                    byte[] buffer = new byte[4];
+
+                    //Try to receive the amount of data 
+                    read = client.Receive(buffer);
+
+                    //invalid packet size received 
+                    if (read == 0) 
+                        Cleanup();
+                    //Valid packet size received 
+                    else if (read == 4)
+                    {
+                        //Convert the size buffer into a valid integer 
+                        size = BitConverter.ToInt32(buffer, 0);
+
+                        //Resize the buffer to 8 kb (we will be receiving data 8 kbs at a time if) 
+                        buffer = new byte[8192];
+
+                        //While there is data left to receive 
+                        while (size > 0)
+                        {
+                            //receive some of that data and store the amount in the read variable 
+                            //conditional operator used to not over receive data (E.g. size is less then buffer 
+                            read = client.Receive(buffer, 0, size > buffer.Length ? buffer.Length : size, SocketFlags.None);
+
+                            //Write the buffer to the ms 
+                            ms.Write(buffer, 0, read);
+
+                            //Subtract from the total amount of data left to receive 
+                            size -= read;
+                        }
+
+                        //If the event handler is set for the inbound data 
+                        handleInboundData(ms.ToArray()); //handle the data (This will differ depending on the protocol) 
+                    }
+
+                    //Clean up the resources used 
+                    buffer = null;
+                    read = 0;
+                    size = 0;
+                    ms.Dispose();
+
+                    //If the client is still enabled... 
+                    if(Enabled)
+                        //Try receiving more data 
+                        this.client.BeginReceive(new byte[] { 0 }, 0, 0, 0, ReceiveData, null);
                 }
                 catch (Exception ex)
                 {
-                    //We have failed to receive data so lets notify the main program (typically means the client has disconnected) 
-                    if (Disconnected != null)
-                        ///Call the event using this object 
-                        Disconnected(this);
-
                     //Lastly cleanup this object (kind of like an internal dispose to clean up our objects) 
                     Cleanup();
                 }
-            }
+            //END OF LOCKER 
+            } 
         }
+
+        public abstract void handleInboundData(byte[] data);
 
         /// <summary>
         /// Call this method to cleanup and close the existing connection 
@@ -146,6 +183,11 @@ namespace jvChatServer.Core.Networking
             //If the client is still enabled 
             if(Enabled)
             {
+                //We have failed to receive data so lets notify the main program (typically means the client has disconnected) 
+                if (Disconnected != null)
+                    ///Call the event using this object 
+                    Disconnected(this);
+
                 //set the object to disabled state 
                 Enabled = false;
 
