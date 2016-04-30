@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace jvChatServer.Core.Networking
 {
+    /// <summary>
+    /// These are the different protocols our chat software will be able to use
+    /// </summary>
     public enum ConnectionProtocol
     {
         Invalid = 0,

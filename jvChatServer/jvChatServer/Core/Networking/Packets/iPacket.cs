@@ -4,14 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace jvChatServer
+namespace jvChatServer.Core.Networking.Packets
 {
-    class Program
-    {
-        static void Main(string[] args)
-        {
-           
-        }
-
+    interface iPacket
+    { 
+        
     }
 }

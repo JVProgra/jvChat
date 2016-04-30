@@ -45,7 +45,11 @@
   <ItemGroup>
     <Compile Include="Core\Networking\BaseClient.cs" />
     <Compile Include="Core\Networking\ConnectionArgs.cs" />
+    <Compile Include="Core\Networking\InformationClient.cs" />
+    <Compile Include="Core\Networking\Packets\InformationPacket.cs" />
+    <Compile Include="Core\Networking\Packets\iPacket.cs" />
     <Compile Include="Core\Networking\Server.cs" />
+    <Compile Include="Core\Util\Logger.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

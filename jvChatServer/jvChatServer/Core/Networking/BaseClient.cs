@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
+using jvChatServer.Core.Networking.Packets;
 
 namespace jvChatServer.Core.Networking
 {
@@ -31,6 +32,9 @@ namespace jvChatServer.Core.Networking
         //=== Event Handlers === 
         public delegate void DisconnectedHandler(BaseClient client);
         public event DisconnectedHandler Disconnected;
+
+        public delegate void ReceivedPacketHandler(BaseClient client, iPacket packet);
+        event ReceivedPacketHandler PacketReceived; 
 
         /// <summary>
         /// Constructor to create instance of new base in bound client 
@@ -89,19 +93,32 @@ namespace jvChatServer.Core.Networking
         /// </summary>
         /// <param name="data">The data you wish to send the client</param>
         /// <returns>The amount of bytes sent</returns>
-        public int sendBytes(byte[] data)
+        protected int sendBytes(byte[] data)
         {
             //Lock the sender object so we can only call send once at a time (it will "Queue" the rest of the calls and execute accordingly) 
             lock(sendLocker)
             {
-                //Send the size of the packet 
-                this.client.Send(BitConverter.GetBytes(data.Length));
+                try
+                {
+                    //Send the size of the packet 
+                    this.client.Send(BitConverter.GetBytes(data.Length));
 
-                //Send the packet itself and return the length of data sent + 4 (size of packet is an integer; thus + 4 bytes) 
-                return this.client.Send(data) + 4; 
+                    //Send the packet itself and return the length of data sent + 4 (size of packet is an integer; thus + 4 bytes) 
+                    return this.client.Send(data) + 4;
+                }
+                catch (Exception ex)
+                {
+                    //ERROR LOG HERE 
+
+                    //We are unable to send data and the client may have been disconnected so close the connection (client cant reconnect) 
+                    Cleanup(); 
+                }
+                return 0; 
             }
             
         }
+
+        protected abstract int sendData(byte[] data); 
 
         //We will use this callback to begin receiving data 
         private void ReceiveData(IAsyncResult ir)

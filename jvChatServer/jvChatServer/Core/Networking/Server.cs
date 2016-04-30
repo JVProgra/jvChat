@@ -113,12 +113,13 @@ namespace jvChatServer.Core.Networking
                     //Receive the incoming connection and store it in the socket variable "client" 
                     Socket client = svrSocket.EndAccept(ir);
 
-                    //****************PLEASE MODIFY THIS TO RUN ON A NEW THREAD BECAUSE OF HANDSHAKE*******************************
 
                     //If the event handler for inbound connection is being handled
                     if (InboundConnection != null)
                         //Raise the event with a new connection args using this as the server and our new inbound client as our client socket 
-                        InboundConnection(new ConnectionArgs(this, client));
+                        //Run event on new thread as ConnectionArgs will be performing a Handshake which may take time 
+                        //********* CODE BELOW MAYBE UPDATED AT A LATER TIME TO BE MORE OPTIMIZED ************
+                        new Thread(() => { try { InboundConnection(new ConnectionArgs(this, client)); } catch (Exception ex) { } }).Start(); 
                     else
                         //If the event is not set then dispose of the new inbound client as we have no where to send it
                         client.Dispose();
