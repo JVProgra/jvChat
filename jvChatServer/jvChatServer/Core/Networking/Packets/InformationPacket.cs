@@ -15,7 +15,9 @@ namespace jvChatServer.Core.Networking.Packets
         Invalid = 0, 
         Login,
         LoginResponse, 
-        Message
+        Message,
+        ServerMessage,
+        Command
     }
 
     class InformationPacket : iPacket
