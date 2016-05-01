@@ -49,6 +49,8 @@
     <Compile Include="Core\Networking\Packets\InformationPacket.cs" />
     <Compile Include="Core\Networking\Packets\iPacket.cs" />
     <Compile Include="Core\Networking\Server.cs" />
+    <Compile Include="Core\Users\User.cs" />
+    <Compile Include="Core\Users\UserManager.cs" />
     <Compile Include="Core\Util\Cryptography.cs" />
     <Compile Include="Core\Util\Logger.cs" />
     <Compile Include="Program.cs" />
