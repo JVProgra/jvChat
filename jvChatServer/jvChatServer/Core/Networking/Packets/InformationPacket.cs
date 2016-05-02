@@ -32,7 +32,24 @@ namespace jvChatServer.Core.Networking.Packets
         /// The body of the data in a raw format 
         /// </summary>
         public byte[] Body { get; set; } 
-
+        
+        //Constructor for byte[] data 
+        public InformationPacket(InformationHeader header, byte[] body)
+        {
+            //Pass the params to the class properties
+            this.Header = header; 
+            this.Body = body; 
+        }
+        
+        public InformationPacket(InformationHeader header, string body)
+        {
+            //Pass the header param
+            this.Header = header;
+            
+            //Set the body encoded as acsii 
+            setBody(body); 
+        }
+        
         /// <summary>
         /// This method will convert a string to raw bytes to store in the body 
         /// </summary>
@@ -41,7 +58,13 @@ namespace jvChatServer.Core.Networking.Packets
         {
             this.Body = Encoding.ASCII.GetBytes(data); 
         }
-
+        
+        
+        //Returns the body of the packet in ascii string format 
+        public string getBody()
+        {
+            return Encoding.ASCII.GetString(this.Body); 
+        }
 
         //Friend functions for encapsulations / decapsulation
         
