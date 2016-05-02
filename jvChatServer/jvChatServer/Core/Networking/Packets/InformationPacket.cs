@@ -33,6 +33,16 @@ namespace jvChatServer.Core.Networking.Packets
         /// </summary>
         public byte[] Body { get; set; } 
         
+        //Default constructor to set everything in a safe state
+        public InformationPacket()
+        {
+            //Invalid packet type because nothing was specified 
+            this.Header = InformationHeader.Invalid;
+            
+            //Create an empty body to help avoid null ptr exceptions 
+            this.Body = new byte[] { 0 }; 
+        }
+        
         //Constructor for byte[] data 
         public InformationPacket(InformationHeader header, byte[] body)
         {
