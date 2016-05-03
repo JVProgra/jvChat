@@ -222,9 +222,32 @@ namespace jvChatServer.Core
         }
         #endregion 
 
+        //This event is called when a connection disconnects from the chat server. It will need to be recoded once the other protocols are implemented. 
         private void Disconnected(BaseClient client)
         {
-            throw new NotImplementedException();
+            //Try to find the matching pending connection based on the ip address 
+            var c = PendingConnections.SingleOrDefault(_c => _c.IPAddress == client.IPAddress);
+
+            //If found 
+            if (c != null)
+            {
+                //Remove the pending connection from the list
+                PendingConnections.Remove(c);
+            }
+            else
+            {
+                //Stop even from executing mutliple times as once (the modified dictionary can cause an issue) 
+                lock(ActiveConnections)
+                {
+
+                    //Remove the matching clients from the list 
+                    foreach (var item in ActiveConnections.Where(k => k.Value == (InformationClient)client).ToList())
+                        ActiveConnections.Remove(item.Key); 
+
+                    
+                }
+            }
+
         }
     }
 }

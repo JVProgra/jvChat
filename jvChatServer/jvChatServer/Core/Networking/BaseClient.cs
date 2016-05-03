@@ -60,6 +60,11 @@ namespace jvChatServer.Core.Networking
             Crypto.PublicKey = this.UUID.ToString(); 
         }
 
+        public BaseClient(string server, int port)
+        {
+
+        }
+
         /// <summary>
         /// Cal this method to start receiving data from the client 
         /// </summary>
@@ -69,6 +74,8 @@ namespace jvChatServer.Core.Networking
             //If the base socket is already running then return false 
             if (Enabled)
                 return false;
+
+            this.Enabled = true; 
 
             //Create a new bg thread to handle this connections receive data on 
             recThread = new Thread(() =>

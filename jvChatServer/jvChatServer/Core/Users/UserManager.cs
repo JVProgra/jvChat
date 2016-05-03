@@ -19,7 +19,12 @@ namespace jvChatServer.Core.Users
         //Constructor 
         public UserManager()
         {
-            Users = new List<User>();     
+            Users = new List<User>();
+
+
+            //Add default admin account
+            Users.Add(new User { Name = "Admin", Password = "Password", Level = AccountLevel.Administrator });
+            Users.Add(new User { Name = "User", Password = "Password", Level = AccountLevel.Basic });
         }
 
         /// <summary>
@@ -110,8 +115,10 @@ namespace jvChatServer.Core.Users
         /// <returns>The user controller or throws an exception</returns>
         public static UserManager FromFile(string path)
         {
+            //If no database file exists 
             if (!File.Exists(path))
-                throw new Exception("Unable to locate user controller database file.");
+                //Return a new empty user manager 
+                return new UserManager();
 
             //Create a variable to store the new controller in
             UserManager uCon = new UserManager();
