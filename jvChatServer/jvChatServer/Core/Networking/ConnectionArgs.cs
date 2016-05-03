@@ -44,6 +44,18 @@ namespace jvChatServer.Core.Networking
         /// </summary>
         public bool isValid { get { return Client != null; } }
 
+        internal Server Server1
+        {
+            get
+            {
+                throw new System.NotImplementedException();
+            }
+
+            set
+            {
+            }
+        }
+
         /// <summary>
         /// Creates a new instance of the connection args object 
         /// </summary>

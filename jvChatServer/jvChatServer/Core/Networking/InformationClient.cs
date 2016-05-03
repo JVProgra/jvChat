@@ -30,6 +30,7 @@ namespace jvChatServer.Core.Networking
             if(PacketReceived != null)
             {
                 //Perform Decryption here 
+                Crypto.Decrypt(data);
 
                 //Perform Decompression here 
 
@@ -53,11 +54,12 @@ namespace jvChatServer.Core.Networking
         {
             //If the data is null then exit and send nothing (probably an invalid packet was attempted to be sent) 
             if (data == null)
-                return 0; 
+                return 0;
 
             //perform compression 
 
             //perform encryption 
+            Crypto.Encrypt(data);
 
             return base.sendBytes(data); 
         }

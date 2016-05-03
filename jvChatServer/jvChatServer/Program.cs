@@ -10,7 +10,19 @@ namespace jvChatServer
     {
         static void Main(string[] args)
         {
-           
+            //Create a new chat controller / manager 
+            jvChatServer.Core.ChatController controller = new Core.ChatController(1024, "users.db");
+
+            //Start the chat server 
+            controller.Start();
+
+            //Will be adding a the ability to execute server commands via the console window here 
+            while (true)
+            {
+                //just a space holder for now 
+                Console.ReadLine(); 
+            }
+
         }
 
     }

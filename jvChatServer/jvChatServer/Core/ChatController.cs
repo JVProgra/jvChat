@@ -66,6 +66,25 @@ namespace jvChatServer.Core
             this.Server.InboundConnection += Server_InboundConnection;
         }
 
+        /// <summary>
+        /// Enables the chat server to start accepting new incomming connections 
+        /// </summary>
+        public void Start()
+        {
+            this.Server.Start(); 
+        }
+
+        /// <summary>
+        /// Disables the chat server to stop receiving connections and closes all existing connections 
+        /// </summary>
+        public void Stop()
+        {
+            this.Server.Stop(); 
+
+            //Clean up all active connections? (Close all existing connections here because we are closing the program) 
+            //*** implement later *** 
+        }
+
         //Tis method is used to handle incoming connection attempts 
         private void Server_InboundConnection(ConnectionArgs args)
         {
@@ -118,26 +137,8 @@ namespace jvChatServer.Core
                 //If it's a information protocol... 
                 case ConnectionProtocol.Information:
 
-                    //Convert our client and packet to information formats 
-                    InformationClient ic = (InformationClient)client;
-                    InformationPacket ip = (InformationPacket)packet;
-
-                    //Based on the information packet type we need to handle data accordingly 
-                    switch (ip.Header)
-                    {
-                        case InformationHeader.Login:
-
-                            
-
-                            break; 
-                        //All other packet types are not currently being handled 
-                        default:
-                            //Get rid of packet data 
-                            ip = null; 
-                            break;
-                    }
-
-
+                    //Pass the client and it's information to the packet handler for the specific client type 
+                    infoHandler((InformationClient)client, (InformationPacket)packet); 
                     break;
                 //All other protocols are not currently being handled 
                 case ConnectionProtocol.Audio:
@@ -147,6 +148,79 @@ namespace jvChatServer.Core
             }
 
         }
+
+        #region InformationClientHandler 
+        //Handle information packets here 
+        private void infoHandler(InformationClient ic, InformationPacket ip)
+        {
+            try
+            {
+                //Use this variable to split information when needed (if needed) 
+                string[] args;
+                char delimeter = ';';
+
+                //Based on the header type execute the command 
+                switch (ip.Header)
+                {
+                    case InformationHeader.Login:
+
+                        //split the login packet to get the information 
+                        args = ip.getBody().Split(delimeter);
+
+                        var authenticated = UserManager.ValidateUser(args[0], args[1]);
+
+                        //If the user is validated then we need to move his pending connection to active 
+                        if(authenticated != null)
+                        {
+                            //Remove pending connection 
+                            PendingConnections.Remove(ic);
+
+                            //Add active connection 
+                            ActiveConnections.Add(authenticated, ic);
+
+                            //Send authenticated response 
+                            ic.SendPacket(new InformationPacket(InformationHeader.LoginResponse, "GOOD"));
+                        }
+                        else
+                        {
+                            //send access denied response 
+                            ic.SendPacket(new InformationPacket(InformationHeader.LoginResponse, "BAD"));
+                        }
+
+                        break;
+                    case InformationHeader.Command:
+                        break;
+                    case InformationHeader.Message:
+                        //based on who the message is from...
+                        //resend the incoming packet all other active conections
+                        args = ip.getBody().Split(delimeter);
+                        foreach(User key in ActiveConnections.Keys)
+                        {
+                            //For every other user 
+                            if (key.Name != args[0])
+                            {
+                                //Redirect the packet to all other connections 
+                                ActiveConnections[key].SendPacket(ip); 
+                            }
+                        }
+                         
+                        break;
+                    //All other packet types are not handled by the server or are invalid (may have been currupted or something) 
+                    case InformationHeader.Invalid:
+                    default:
+                        break; 
+                }
+
+            }
+            catch (Exception ex)
+            {
+                //Log the error here
+                
+                //Close and cleanup the client because and error occured (Could be a rogue connection?)  
+                ic.Cleanup(); 
+            }
+        }
+        #endregion 
 
         private void Disconnected(BaseClient client)
         {

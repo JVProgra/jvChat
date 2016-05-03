@@ -28,6 +28,7 @@ namespace jvChatServer.Core.Networking
         private Thread recThread; 
         private object sendLocker;
         private object recLocker;
+        protected Util.Cryptography Crypto; 
 
         //=== Event Handlers === 
         public delegate void DisconnectedHandler(BaseClient client);
@@ -53,7 +54,10 @@ namespace jvChatServer.Core.Networking
 
             //Intialize any other variables in the class to a safe state
             sendLocker = new object();
-            recLocker = new object(); 
+            recLocker = new object();
+            Crypto = new Util.Cryptography();
+            Crypto.PrivateKey = "{JVPROGRAMMING}";
+            Crypto.PublicKey = this.UUID.ToString(); 
         }
 
         /// <summary>
