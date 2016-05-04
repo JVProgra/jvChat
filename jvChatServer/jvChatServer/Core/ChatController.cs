@@ -197,9 +197,10 @@ namespace jvChatServer.Core
                         foreach(User key in ActiveConnections.Keys)
                         {
                             //For every other user 
-                            if (key.Name != args[0])
+                            //if (key.Name != args[0])
                             {
                                 //Redirect the packet to all other connections 
+
                                 ActiveConnections[key].SendPacket(ip); 
                             }
                         }

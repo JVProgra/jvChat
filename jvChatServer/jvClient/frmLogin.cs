@@ -57,10 +57,18 @@ namespace jvClient
                         //Good response, so close the login form and open the chat window 
                         Invoke((MethodInvoker)delegate
                         {
-                            frmChat chat = new frmChat();
+                            //Stop handling the connection on this form 
+                            Program.Connection.PacketReceived -= Connection_PacketReceived;
+                            Program.Connection.Disconnected -= Connection_Disconnected;
 
+                            //Create a new chat window with the users name 
+                            frmChat chat = new frmChat(txtUsername.Text);
+
+                            //Hide this form 
                             this.Hide();
-                            chat.ShowDialog();
+
+                            //Show the chat program 
+                            chat.Show();
                         });
 
                     }
